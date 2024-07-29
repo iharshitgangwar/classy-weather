@@ -50,7 +50,6 @@ class App extends React.Component {
         `https://geocoding-api.open-meteo.com/v1/search?name=${this.state.location}`
       );
       const geoData = await geoRes.json();
-
       if (!geoData.results) throw new Error("Location not found");
 
       const { latitude, longitude, timezone, name, country_code } =
