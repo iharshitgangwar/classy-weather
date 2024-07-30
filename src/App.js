@@ -33,16 +33,17 @@ function convertToFlag(countryCode) {
   return String.fromCodePoint(...codePoints);
 }
 class App extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = { location: 'lisbon', isLoading: false, displaylocation: '', weather: {} }
-    this.fetchWeather = this.fetchWeather.bind(this)
-  }
+
+  state = { location: ' ', isLoading: false, displaylocation: '', weather: {} }
+  // constructor(props) {
+  //   super(props)
+  //   // this.fetchWeather = this.fetchWeather.bind(this)
+  // }
 
 
-
-
-  async fetchWeather() {
+  // arrow function do not need binding they auto bound there srrounding
+  fetchWeather = async () => {
+    if (this.state.location.length < 3) return;
     try {
       // 1) Getting location (geocoding)
       this.setState({ isLoading: true })
@@ -54,7 +55,7 @@ class App extends React.Component {
 
       const { latitude, longitude, timezone, name, country_code } =
         geoData.results.at(0);
-      this.setState({ displaylocation: `${name} ${console.log(convertToFlag(country_code))}` });
+      this.setState({ displaylocation: `${name} ${convertToFlag(country_code)}` });
 
       // 2) Getting actual weather
       const weatherRes = await fetch(
@@ -70,13 +71,24 @@ class App extends React.Component {
     }
   }
 
+  setLocation = e => this.setState({ location: e.target.value })
+  // useeffect[]
+  componentDidMount() {
+    this.setState({ location: localStorage.getItem('location') || '' })
+  }
+  // useeffect []
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.location !== prevState.location) {
+      this.fetchWeather();
+      localStorage.setItem('location', this.state.location)
+    }
+  }
+
   render() {
     return (
       <div className="app">
         <h1>Classy Weather</h1>
-        <div>
-          <input type="text" placeholder="Search For Location" value={this.state.location} onChange={e => this.setState({ location: e.target.value })}></input>
-        </div>
+        <Input location={this.state.location} setLocation={this.setLocation} />
         <button onClick={this.fetchWeather}>Get Weather</button>
         {this.state.isLoading && <p className="loader">Loading...</p>}
         {this.state.weather.weathercode && <Weather weather={this.state.weather} location={this.state.location} />}
@@ -85,8 +97,18 @@ class App extends React.Component {
 }
 
 export default App
-
+class Input extends React.Component {
+  render() {
+    return (
+      <div>
+        <input type="text" placeholder="Search For Location" value={this.props.location} onChange={this.props.setLocation}></input>
+      </div>)
+  }
+}
 class Weather extends React.Component {
+  componentWillUnmount() {
+    console.log('weather will unmount')
+  }
   render() {
     const { temperature_2m_max: max, temperature_2m_min: min, time: dates, weathercode: codes } = this.props.weather
     return (
